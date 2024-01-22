@@ -155,36 +155,36 @@ END;
 --  =================
 --  =================  Check for APEX 5.1.0 or above
 --  =================
--- PROMPT  ...... Test for Valid Instance of APEX 5.1.0 or above
--- declare
---     l_version number;
---     l_status dba_registry.status%TYPE := 'INVALID';
--- begin
---     BEGIN 
---        execute immediate
---          'select to_number(replace(version,''.'',null)), status from registry$ where cid=''APEX'''
---        into l_version, l_status;
---     EXCEPTION
---        when NO_DATA_FOUND then
---          dbms_output.put_line('SERT installation requires a VALID APEX installation of Version 5.1.1 or above.');
---           dbms_output.put_line('-- NO APEX INSTALLATION FOUND IN DBA_REGISTRY.');
---           execute immediate 'bogus statement to force exit';
---        when others then
---           dbms_output.put_line('Error Selecting data from registry$ ');
---           dbms_output.put_line(SQLERRM);
---          execute immediate 'bogus statement to force exit'; 
---     END; 
+PROMPT  ...... Test for Valid Instance of APEX 5.1.0 or above
+declare
+    l_version number;
+    l_status dba_registry.status%TYPE := 'INVALID';
+begin
+    BEGIN 
+       execute immediate
+         'select to_number(replace(version,''.'',null)), status from registry$ where cid=''APEX'''
+       into l_version, l_status;
+    EXCEPTION
+       when NO_DATA_FOUND then
+         dbms_output.put_line('SERT installation requires a VALID APEX installation of Version 5.1.1 or above.');
+          dbms_output.put_line('-- NO APEX INSTALLATION FOUND IN DBA_REGISTRY.');
+          execute immediate 'bogus statement to force exit';
+       when others then
+          dbms_output.put_line('Error Selecting data from registry$ ');
+          dbms_output.put_line(SQLERRM);
+         execute immediate 'bogus statement to force exit'; 
+    END; 
     
---     if l_version < 5110000 then
---         dbms_output.put_line('This APEX-SERT installation requires APEX version 5.1.0 or later.');
---         execute immediate 'bogus statement to force exit';
---     elsif l_status = 'INVALID' then
---         dbms_output.put_line('Current version of APEX is marked as INVALID.');
---         execute immediate 'bogus statement to force exit';
---     end if;
+    if l_version < 5110000 then
+        dbms_output.put_line('This APEX-SERT installation requires APEX version 5.1.0 or later.');
+        execute immediate 'bogus statement to force exit';
+    elsif l_status = 'INVALID' then
+        dbms_output.put_line('Current version of APEX is marked as INVALID.');
+        execute immediate 'bogus statement to force exit';
+    end if;
 
--- end;
--- /
+end;
+/
 
 --  =================
 --  =================  Check for the correct SERT Version
