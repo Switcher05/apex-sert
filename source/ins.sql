@@ -100,44 +100,57 @@ end;
 --  =================
 --  =================  Check for V11.2.0.4 and above of the databse
 --  =================
+
 PROMPT  ...... Test for Oracle 11.2.0.4 or above
 
-declare
-    l_version number;
-begin
-    execute immediate
-      'select to_number(replace(version,''.'',null)) from registry$ where cid=''CATPROC'''
-    into l_version;
-
-    if l_version < 110204 then
+DECLARE
+    l_major     NUMBER;
+    l_minor     NUMBER;
+    l_update    NUMBER;
+BEGIN
+    -- Extract major, minor and update components of the version
+    SELECT TO_NUMBER(SUBSTR(banner, INSTR(banner, 'Release ', 1) + 8, 2)) AS major,
+           TO_NUMBER(SUBSTR(banner, INSTR(banner, '.', 1, 1) + 1, 1)) AS minor,
+           TO_NUMBER(SUBSTR(banner, INSTR(banner, '.', 1, 2) + 1, 2)) AS update_v
+    INTO   l_major, l_minor, l_update
+    FROM   v$version
+    WHERE  banner LIKE 'Oracle%';
+dbms_output.put_line(l_major || l_minor || l_update);
+    -- Check if the version is lower than 11.2.0.4
+    IF l_major < 11 OR (l_major = 11 AND (l_minor < 2 OR (l_minor = 2 AND l_update < 4))) THEN
         dbms_output.put_line('APEX-SERT installation requires database version 11.2.0.4 or later.');
-        execute immediate 'bogus statement to force exit';
-    end if;
-end;
+        EXECUTE IMMEDIATE 'RAISE_APPLICATION_ERROR(-20001, ''Incompatible database version'')';
+    END IF;
+END;
 /
-
 --  =================
 --  =================  Check for XE edition 
 --  =================
 PROMPT  ...... Test for XE Edition of Oracle
-declare
-    l_edition varchar2(30) := 'notXE';
-begin
-        begin
-            execute immediate
-              'select edition from registry$ WHERE cid=''CATPROC'''
-            into l_edition;
-        exception when others then
-            null;
-        end;
 
+DECLARE
+    l_banner   VARCHAR2(1000);
+    l_edition  VARCHAR2(30) := 'notXE';
+BEGIN
+    -- Retrieve database version and edition
+    SELECT banner INTO l_banner FROM v$version WHERE banner LIKE 'Oracle%';
 
-    if l_edition = 'XE' then
+    -- Check if the banner contains 'Express Edition'
+    IF UPPER(l_banner) LIKE '%EXPRESS EDITION%' THEN
+        l_edition := 'XE';
+    END IF;
+
+    -- Output the database version and edition
+    dbms_output.put_line('Database Version and Edition: ' || l_banner);
+
+    -- Check if the edition is XE
+    IF l_edition = 'XE' THEN
         dbms_output.put_line('APEX-SERT will not run on the XE edition of Oracle.');
-        execute immediate 'bogus statement to force exit';
-    end if;
-end;
+        EXECUTE IMMEDIATE 'RAISE_APPLICATION_ERROR(-20001, ''Oracle XE edition detected'')';
+    END IF;
+END;
 /
+
 -- TODO: Bump to 22
 --  =================
 --  =================  Check for APEX 5.1.0 or above
